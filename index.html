@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Mouse Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+
+        .video-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .video-feed {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .gesture-info {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .gesture-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .gesture-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .gesture-list li:last-child {
+            border-bottom: none;
+        }
+
+        .current-gesture {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .emoji-display {
+            font-size: 4rem;
+            text-align: center;
+            margin: 1rem 0;
+            min-height: 100px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+
+        .header p {
+            color: #6c757d;
+        }
+
+        #status {
+            text-align: center;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .controls {
+            margin-top: 2rem;
+        }
+
+        .control-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+
+        .gesture {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .description {
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Virtual Mouse Control</h1>
+            <p>Control your computer using hand gestures</p>
+            <div id="status" class="disconnected">Connecting to server...</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="video-container">
+                    <img id="video-feed" class="video-feed" alt="Video Feed">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="gesture-info">
+                    <h3>Current Gesture</h3>
+                    <div class="current-gesture" id="current-gesture">None</div>
+                    <div class="emoji-display" id="emoji-display"></div>
+                </div>
+
+                <div class="controls">
+                    <h2>Gesture Controls</h2>
+                    <div class="control-item">
+                        <span class="gesture">👆 Up</span>
+                        <span class="description">Move Mouse</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👆 + ✌️</span>
+                        <span class="description">Left Click</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👆 + 🖐️</span>
+                        <span class="description">Right Click</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👆 + 🖐️</span>
+                        <span class="description">Take Screenshot</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👍 + 👆</span>
+                        <span class="description">Volume Up</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👍 + ✌️</span>
+                        <span class="description">Volume Down</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👍 + 🖐️</span>
+                        <span class="description">Show Heart ❤️</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👍 + 🖐️</span>
+                        <span class="description">Show Smile 😊</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">✋ All Up</span>
+                        <span class="description">Show Thumbs Up 👍</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👆 + 🖐️</span>
+                        <span class="description">Show Rock 🤘</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="gesture">👆 + ✌️</span>
+                        <span class="description">Show Victory ✌️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const BACKEND_URL = process.env.BACKEND_URL; // Local backend URL
+        let isConnected = false;
+
+        // Update video feed
+        function updateVideoFeed() {
+            const videoFeed = document.getElementById('video-feed');
+            videoFeed.src = `${BACKEND_URL}/video_feed`;
+        }
+
+        // Update gesture
+        function updateGesture() {
+            fetch(`${BACKEND_URL}/get_gesture`)
+                .then(response => response.json())
+                .then(data => {
+                    const gestureElement = document.getElementById('current-gesture');
+                    const emojiElement = document.getElementById('emoji-display');
+                    const statusElement = document.getElementById('status');
+
+                    gestureElement.textContent = data.gesture.charAt(0).toUpperCase() + data.gesture.slice(1);
+
+                    // Update emoji display
+                    const emojis = {
+                        'heart': '❤️',
+                        'smile': '😊',
+                        'thumbs_up': '👍',
+                        'rock': '🤘',
+                        'victory': '✌️'
+                    };
+
+                    emojiElement.textContent = emojis[data.gesture] || '';
+
+                    // Update connection status
+                    if (!isConnected) {
+                        isConnected = true;
+                        statusElement.textContent = 'Connected to server';
+                        statusElement.className = 'connected';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching gesture:', error);
+                    const statusElement = document.getElementById('status');
+                    statusElement.textContent = 'Disconnected from server';
+                    statusElement.className = 'disconnected';
+                    isConnected = false;
+                });
+        }
+
+        // Initialize
+        updateVideoFeed();
+        setInterval(updateGesture, 100);
+    </script>
+</body>
+
+</html>
